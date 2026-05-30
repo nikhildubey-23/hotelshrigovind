@@ -669,7 +669,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
         items_data.append([P(f'<b>{desc}</b>', fs=10), P(f'<b>{ec.quantity}</b>', fs=10, a=TA_CENTER), P(f'<b>Rs. {unit_rate:,.2f}</b>', fs=10, a=TA_RIGHT, fn='Courier'), P(f'<b>Rs. {float(ec.amount):,.2f}</b>', fs=10, a=TA_RIGHT, fn='Courier')])
     
     if float(booking.discount or 0) > 0:
-        items_data.append([P('<b>Discount</b>', fs=10), P('', fs=10), P('', fs=10), P(f'<b>Rs. {float(booking.discount):,.2f}</b>', fs=10, a=TA_RIGHT, fn='Courier', c=SUCCESS)])
+        items_data.append([P('<b>Discount</b>', fs=10), P('', fs=10), P('', fs=10), P(f'<b>Rs. {float(booking.discount):,.2f}</b>', fs=10, a=TA_RIGHT, fn='Courier', c=colors.black)])
     
     items_table = Table(items_data, colWidths=[260, 50, 100, 110])
     items_table.setStyle(TableStyle([
@@ -690,7 +690,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
         taxable = float(booking.total_amount) - float(booking.gst_amount)
         cgst = round(float(booking.gst_amount) / 2, 2)
         sgst = float(booking.gst_amount) - cgst
-        totals_data.append([P(f'<b>Grand Total (Incl. GST {gst_rate:.1f}%):</b>', fs=11, c=PRIMARY, a=TA_RIGHT), P(f'<b>Rs. {float(booking.total_amount):,.2f}</b>', fs=11, c=PRIMARY, a=TA_RIGHT, fn='Courier')])
+        totals_data.append([P(f'<b>Grand Total (Incl. GST {gst_rate:.1f}%):</b>', fs=11, c=colors.black, a=TA_RIGHT), P(f'<b>Rs. {float(booking.total_amount):,.2f}</b>', fs=11, c=colors.black, a=TA_RIGHT, fn='Courier')])
         totals_data.append([P('<i>Included Tax Breakdown</i>', fs=8, c=DARK, a=TA_RIGHT), P('', fs=10)])
         totals_data.append([P('<b>Taxable Amount</b>', fs=9, a=TA_RIGHT), P(f'<b>Rs. {taxable:,.2f}</b>', fs=9, a=TA_RIGHT, fn='Courier')])
         totals_data.append([P(f'<b>CGST @{gst_rate/2:.1f}%</b>', fs=9, a=TA_RIGHT), P(f'<b>Rs. {cgst:,.2f}</b>', fs=9, a=TA_RIGHT, fn='Courier')])
@@ -706,7 +706,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
             totals_data.append([P(f'<b>CGST @{gst_percent:.1f}%</b>', fs=9, a=TA_RIGHT), P(f'<b>Rs. {cgst_e:,.2f}</b>', fs=9, a=TA_RIGHT, fn='Courier')])
             totals_data.append([P(f'<b>SGST @{gst_percent:.1f}%</b>', fs=9, a=TA_RIGHT), P(f'<b>Rs. {sgst_e:,.2f}</b>', fs=9, a=TA_RIGHT, fn='Courier')])
             totals_data.append([P('<b>Total GST</b>', fs=9, c=DARK, a=TA_RIGHT), P(f'<b>Rs. {gst_amount:,.2f}</b>', fs=9, c=DARK, a=TA_RIGHT, fn='Courier')])
-        totals_data.append([P(f'<b>Grand Total (incl. GST {float(booking.gst_rate or 5):.1f}%):</b>', fs=11, c=PRIMARY, a=TA_RIGHT), P(f'<b>Rs. {float(booking.total_amount):,.2f}</b>', fs=11, c=PRIMARY, a=TA_RIGHT, fn='Courier')])
+        totals_data.append([P(f'<b>Grand Total (incl. GST {float(booking.gst_rate or 5):.1f}%):</b>', fs=11, c=colors.black, a=TA_RIGHT), P(f'<b>Rs. {float(booking.total_amount):,.2f}</b>', fs=11, c=colors.black, a=TA_RIGHT, fn='Courier')])
     
     pending = float(booking.pending_amount or 0)
     advance = float(booking.advance_amount or 0)
