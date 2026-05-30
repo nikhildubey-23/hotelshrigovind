@@ -13,5 +13,4 @@ email-validator
 python-dotenv
 psycopg2-binary
 boto3
-weasyprint
 gunicorn

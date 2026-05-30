@@ -27,7 +27,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
-import weasyprint
 import os
 
 app = Flask(__name__)
@@ -496,7 +495,6 @@ def create_pdf_invoice(invoice, booking, customer, room):
     elements = []
     
     styles = getSampleStyleSheet()
-    normal_style = styles['Normal']
     
     hotel_name = Settings.get('hotel_name', 'HOTEL SHRI GOVIND')
     hotel_address = Settings.get('hotel_address', '')
@@ -509,93 +507,80 @@ def create_pdf_invoice(invoice, booking, customer, room):
     SUCCESS = colors.HexColor('#38a169')
     DANGER = colors.HexColor('#e53e3e')
     GRAY = colors.HexColor('#718096')
+    DARK = colors.HexColor('#1a202c')
     
-    def P(text, style='N', **kw):
-        return Paragraph(text, ParagraphStyle('S', parent=styles['Normal'], fontSize=kw.get('fs', 11), textColor=kw.get('c', colors.black), alignment=kw.get('a', TA_LEFT), fontName=kw.get('fn', 'Helvetica'), spaceAfter=kw.get('sa', 0), spaceBefore=kw.get('sb', 0), leading=kw.get('l', 14)))
+    def P(text, **kw):
+        return Paragraph(text, ParagraphStyle('S', parent=styles['Normal'],
+            fontSize=kw.get('fs', 11), textColor=kw.get('c', colors.black),
+            alignment=kw.get('a', TA_LEFT), fontName=kw.get('fn', 'Helvetica'),
+            spaceAfter=kw.get('sa', 0), spaceBefore=kw.get('sb', 0),
+            leading=kw.get('l', 14)))
     
     def H(text, fs=11, c=colors.black, a=TA_LEFT):
         return P(f'<b>{text}</b>', fs=fs, c=c, a=a)
     
-    header_td_left = []
-    header_td_left.append(H(hotel_name.upper(), fs=18, c=PRIMARY))
-    if hotel_address:
-        header_td_left.append(P(hotel_address, fs=10, c=GRAY))
-    contact_parts = []
-    if hotel_phone: contact_parts.append(f'Phone: {hotel_phone}')
-    if hotel_gst: contact_parts.append(f'GST: {hotel_gst}')
-    if contact_parts:
-        header_td_left.append(P(' | '.join(contact_parts), fs=9, c=GRAY))
-    
     checkin_str = booking.actual_check_in.strftime('%d %b %Y, %I:%M %p') if booking.actual_check_in else booking.check_in.strftime('%d %b %Y, %I:%M %p')
     checkout_str = booking.actual_check_out.strftime('%d %b %Y, %I:%M %p') if booking.actual_check_out else booking.check_out.strftime('%d %b %Y, %I:%M %p')
     
-    header_td_right = []
-    header_td_right.append(H('INVOICE', fs=20, c=colors.HexColor('#1a202c'), a=TA_RIGHT))
-    header_td_right.append(P(f'<b>{invoice.invoice_number}</b><br/>Date: {invoice.generated_at.strftime("%d %b %Y, %I:%M %p")}', fs=11, c=colors.HexColor('#4a5568'), a=TA_RIGHT))
+    # --- Logo ---
+    logo_img = None
+    logo_path = os.path.join(os.path.dirname(__file__), 'static', 'logo.png')
+    if os.path.exists(logo_path):
+        try:
+            logo_img = Image(logo_path, width=70, height=70)
+        except:
+            logo_img = None
     
-    left_content = []
-    for item in header_td_left:
-        left_content.append(item)
-    left_cell = []
-    for item in left_content:
-        left_cell.append(item)
+    contact_parts = []
+    if hotel_phone: contact_parts.append(f'Phone: {hotel_phone}')
+    if hotel_gst: contact_parts.append(f'GST: {hotel_gst}')
     
-    left_block = []
-    for item in header_td_left:
-        left_block.append(item)
-        left_block.append(Spacer(1, 2))
+    left_text = []
+    left_text.append(H(hotel_name.upper(), fs=18, c=PRIMARY))
+    if hotel_address:
+        left_text.append(P(hotel_address, fs=10, c=GRAY))
+    if contact_parts:
+        left_text.append(P(' | '.join(contact_parts), fs=9, c=GRAY))
     
-    qr_image = None
-    qr_path = os.path.join(os.path.dirname(__file__), 'static', 'hotel_qr.png')
+    if logo_img:
+        left_header = Table([[logo_img, left_text]], colWidths=[80, 220])
+    else:
+        left_header = Table([[left_text]], colWidths=[300])
+    left_header.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+    ]))
+    
+    # --- QR code ---
+    qr_img = None
+    qr_path = os.path.join(os.path.dirname(__file__), 'static', 'real_scanner.jpeg')
     if os.path.exists(qr_path):
         try:
-            qr_image = Image(qr_path, width=60, height=60)
+            qr_img = Image(qr_path, width=60, height=60)
         except:
-            qr_image = None
+            qr_img = None
     
-    right_col_items = []
-    for item in header_td_right:
-        right_col_items.append(item)
-    if qr_image:
-        right_col_items.append(Spacer(1, 5))
-        right_col_items.append(qr_image)
+    right_title = []
+    right_title.append(H('INVOICE', fs=20, c=DARK, a=TA_RIGHT))
+    right_title.append(P(f'<b>{invoice.invoice_number}</b><br/>Date: {invoice.generated_at.strftime("%d %b %Y, %I:%M %p")}', fs=11, c=GRAY, a=TA_RIGHT))
     
-    right_block = []
-    for item in header_td_right:
-        right_block.append(item)
-    if qr_image:
-        right_block.append(Spacer(1, 5))
-        right_block.append(qr_image)
+    if qr_img:
+        right_header = Table([[right_title, qr_img]], colWidths=[170, 70])
+    else:
+        right_header = Table([[right_title]], colWidths=[240])
+    right_header.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
     
-    header_cell_left = []
-    header_cell_left.append(H(hotel_name.upper(), fs=18, c=PRIMARY))
-    if hotel_address:
-        header_cell_left.append(P(hotel_address, fs=10, c=GRAY))
-    if contact_parts:
-        header_cell_left.append(P(' | '.join(contact_parts), fs=9, c=GRAY))
-    
-    header_cell_right = []
-    header_cell_right.append(H('INVOICE', fs=20, c=colors.HexColor('#1a202c'), a=TA_RIGHT))
-    header_cell_right.append(P(f'<b>{invoice.invoice_number}</b><br/>Date: {invoice.generated_at.strftime("%d %b %Y, %I:%M %p")}', fs=11, c=colors.HexColor('#4a5568'), a=TA_RIGHT))
-    if qr_image:
-        header_cell_right.append(Spacer(1, 5))
-        header_cell_right.append(qr_image)
-    
-    left_frame = []
-    for item in header_cell_left:
-        left_frame.append(item)
-    
-    right_frame = []
-    for item in header_cell_right:
-        right_frame.append(item)
-    
-    header_table = Table([
-        [left_frame, right_frame]
-    ], colWidths=[300, 250])
+    header_table = Table([[left_header, right_header]], colWidths=[300, 250])
     header_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     elements.append(header_table)
     elements.append(Spacer(1, 10))
@@ -621,6 +606,8 @@ def create_pdf_invoice(invoice, booking, customer, room):
     
     booking_lines = [H('BOOKING DETAILS', fs=9, c=GRAY)]
     booking_lines.append(P(f'<b>Booking ID:</b> {booking.booking_id}', fs=10))
+    if booking.purpose_of_visit:
+        booking_lines.append(P(f'<b>Purpose:</b> {booking.purpose_of_visit}', fs=10))
     if booking.booking_category == 'wedding':
         pkg_name = {'all_9_ac': 'All 9 AC Rooms', 'all_rooms': 'All Rooms'}.get(booking.wedding_package, 'Wedding Package')
         booking_lines.append(P(f'<b>Package:</b> {pkg_name}', fs=10))
@@ -633,9 +620,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
     booking_lines.append(P(f'<b>Nights:</b> {booking.stay_duration}', fs=10))
     
     col_width = 180
-    info_table = Table([
-        [bill_lines, guest_lines, booking_lines]
-    ], colWidths=[col_width, col_width, col_width])
+    info_table = Table([[bill_lines, guest_lines, booking_lines]], colWidths=[col_width, col_width, col_width])
     info_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
@@ -1687,13 +1672,7 @@ def download_invoice(invoice_id):
     room = db.session.get(Room, booking.room_id) if booking.room_id else None
     customer = db.session.get(Customer, booking.customer_id)
     
-    html = render_template('invoice_pdf_standalone.html', invoice=invoice,
-                           booking=booking, room=room, customer=customer,
-                           now=datetime.now())
-    
-    pdf_buffer = BytesIO()
-    weasyprint.HTML(string=html).write_pdf(pdf_buffer)
-    pdf_buffer.seek(0)
+    pdf_buffer = create_pdf_invoice(invoice, booking, customer, room)
     
     return send_file(
         pdf_buffer,
