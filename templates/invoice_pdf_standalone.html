@@ -210,7 +210,7 @@
             {% set cgst = (booking.gst_amount|float / 2)|round(2) %}
             {% set sgst = booking.gst_amount|float - cgst %}
             <tr>
-                <td><strong>Grand Total (Incl. GST {{ "%.1f"|format(booking.gst_rate|float) }}%):</strong></td>
+                <td><strong>Grand Total:</strong></td>
                 <td style="text-align: right;" class="text-mono"><strong>Rs. {{ "%.2f"|format(booking.total_amount) }}</strong></td>
             </tr>
             <tr><td colspan="2" style="padding: 10px 0 5px 0; font-size: 11px; color: #718096;"><strong>Included Tax Breakdown</strong></td></tr>
@@ -253,7 +253,7 @@
             </tr>
             {% endif %}
             <tr>
-                <td><strong>Grand Total (incl. GST {{ "%.1f"|format(booking.gst_rate|float) }}%):</strong></td>
+                <td><strong>Grand Total:</strong></td>
                 <td style="text-align: right;" class="text-mono"><strong>Rs. {{ "%.2f"|format(booking.total_amount) }}</strong></td>
             </tr>
         {% endif %}

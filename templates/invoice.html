@@ -265,10 +265,6 @@
             {% set taxable = booking.total_amount|float - booking.gst_amount|float %}
             {% set cgst = (booking.gst_amount|float / 2)|round(2) %}
             {% set sgst = booking.gst_amount|float - cgst %}
-            <tr>
-                <td><strong>Grand Total (Incl. GST {{ "%.1f"|format(booking.gst_rate|float) }}%):</strong></td>
-                <td style="text-align: right;" class="text-mono"><strong>Rs. {{ "%.2f"|format(booking.total_amount) }}</strong></td>
-            </tr>
             <tr><td colspan="2" style="padding: 10px 0 5px 0; font-size: 11px; color: var(--gray-500);"><strong>Included Tax Breakdown</strong></td></tr>
             <tr style="font-size: 12px;">
                 <td style="padding-left: 10px;">Taxable Amount</td>
@@ -285,6 +281,10 @@
             <tr style="border-top: 1px solid var(--gray-300); font-size: 12px;">
                 <td style="padding-left: 10px;">Total GST</td>
                 <td style="text-align: right;" class="text-mono">{{ "%.2f"|format(booking.gst_amount) }}</td>
+            </tr>
+            <tr>
+                <td><strong>Grand Total:</strong></td>
+                <td style="text-align: right;" class="text-mono"><strong>Rs. {{ "%.2f"|format(booking.total_amount) }}</strong></td>
             </tr>
             {% else %}
             {% set cgst_e = (booking.gst_amount|float / 2)|round(2) if booking.gst_amount else 0 %}
@@ -307,9 +307,8 @@
                 <td style="padding-left: 10px;">Total GST</td>
                 <td style="text-align: right;" class="text-mono">{{ "%.2f"|format(booking.gst_amount) }}</td>
             </tr>
-            {% endif %}
             <tr>
-                <td><strong>Grand Total (incl. GST {{ "%.1f"|format(booking.gst_rate|float) }}%):</strong></td>
+                <td><strong>Grand Total:</strong></td>
                 <td style="text-align: right;" class="text-mono"><strong>Rs. {{ "%.2f"|format(booking.total_amount) }}</strong></td>
             </tr>
             {% endif %}
@@ -334,6 +333,7 @@
                 <td style="color: var(--success);"><strong>Paid:</strong></td>
                 <td style="text-align: right; color: var(--success);" class="text-mono"><strong>PAID</strong></td>
             </tr>
+            {% endif %}
             {% endif %}
         </table>
     </div>
