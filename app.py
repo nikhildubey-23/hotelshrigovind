@@ -507,6 +507,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
     SUCCESS = colors.HexColor('#38a169')
     DANGER = colors.HexColor('#e53e3e')
     DARK = colors.HexColor('#1a202c')
+    GRAY = colors.HexColor('#6b7280')
     
     BLACK = colors.black
     DARK_HEX = colors.HexColor('#1a202c')
@@ -684,6 +685,7 @@ def create_pdf_invoice(invoice, booking, customer, room):
     
     # --- Table 2: Totals (matching HTML invoice-totals) ---
     totals_data = []
+    charges_data = []
     
     if float(booking.gst_amount or 0) > 0 and booking.gst_mode == 'include':
         gst_rate = float(booking.gst_rate or 5)
@@ -707,6 +709,18 @@ def create_pdf_invoice(invoice, booking, customer, room):
             charges_data.append([P('', fs=10), P('', fs=10), P(f'SGST @{gst_percent:.1f}%', fs=9, a=TA_RIGHT), P(f'{sgst_e:,.2f}', fs=9, a=TA_RIGHT, fn='Courier')])
             charges_data.append([P('', fs=10), P('', fs=10), P('Total GST', fs=9, c=GRAY, a=TA_RIGHT), P(f'{gst_amount:,.2f}', fs=9, c=GRAY, a=TA_RIGHT, fn='Courier')])
         charges_data.append([P('', fs=10), P('', fs=10), P(f'<b>Grand Total:</b>', fs=11, c=PRIMARY, a=TA_RIGHT), P(f'<b>Rs. {float(booking.total_amount):,.2f}</b>', fs=11, c=PRIMARY, a=TA_RIGHT, fn='Courier')])
+    
+    if charges_data:
+        charges_table = Table(charges_data, colWidths=[180, 80, 110, 150])
+        charges_table.setStyle(TableStyle([
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+        ]))
+        elements.append(charges_table)
+        elements.append(Spacer(1, 15))
     
     pending = float(booking.pending_amount or 0)
     advance = float(booking.advance_amount or 0)
